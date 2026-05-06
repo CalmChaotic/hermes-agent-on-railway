@@ -1,0 +1,13 @@
+services:
+  hermes-agent:
+    build: .
+    ports:
+      - "9119:9119"
+    env_file:
+      - .env
+    volumes:
+      - hermes-data:/opt/data
+    restart: unless-stopped
+
+volumes:
+  hermes-data:
