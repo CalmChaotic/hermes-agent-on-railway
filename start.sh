@@ -10,5 +10,6 @@ fi
 hermes gateway run &
 
 # Run the dashboard as the foreground process so Railway can health-check it.
+# --tui enables the embedded Chat tab (xterm.js + PTY-backed TUI in the browser).
 # Railway injects $PORT; fall back to 9119 for local dev.
-exec hermes dashboard --insecure --host 0.0.0.0 --port "${PORT:-9119}"
+exec hermes dashboard --tui --insecure --host 0.0.0.0 --port "${PORT:-9119}"
