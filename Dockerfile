@@ -7,11 +7,22 @@ FROM nousresearch/hermes-agent:latest
 USER root
 RUN chown -R hermes:hermes /opt/hermes/ui-tui
 
-COPY start.sh /opt/hermes/railway-start.sh
-RUN chmod +x /opt/hermes/railway-start.sh
+# Tell the upstream entrypoint to:
+#   1. Launch the web dashboard as a background side-process
+#   2. Enable the embedded TUI Chat tab (xterm.js + PTY)
+#   3. Bind dashboard to all interfaces (Railway needs this)
+#   4. Listen on a fixed internal port — configure Railway's public domain
+#      to target this port via the service's Networking settings.
+ENV HERMES_DASHBOARD=1 \
+    HERMES_DASHBOARD_TUI=1 \
+    HERMES_DASHBOARD_HOST=0.0.0.0 \
+    HERMES_DASHBOARD_PORT=9119
 
-# Preserve the upstream entrypoint (tini + /opt/hermes/docker/entrypoint.sh)
-# which handles .env rendering, volume ownership, and privilege dropping.
-# Our start.sh is passed as CMD — it runs the gateway + dashboard with --tui.
-ENTRYPOINT ["/usr/bin/tini", "-g", "--", "/opt/hermes/docker/entrypoint.sh"]
-CMD ["/opt/hermes/railway-start.sh"]
+# Expose the dashboard port for Railway's port detection
+EXPOSE 9119
+
+# Run the gateway in the foreground. The upstream entrypoint will:
+# - drop root privileges to the hermes user
+# - launch the dashboard as a side process (because HERMES_DASHBOARD=1)
+# - exec `hermes gateway run` as the foreground command
+CMD ["gateway", "run"]
